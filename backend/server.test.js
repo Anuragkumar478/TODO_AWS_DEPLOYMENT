@@ -1,18 +1,22 @@
 const request = require("supertest");
 const mongoose = require("mongoose");
-const { MongoMemoryServer } = require("mongodb-memory-server");
 
 const app = require("./app");
 const Todo = require("./model");
 
-let mongoServer;
+jest.setTimeout(30000);
+
+const TEST_DB_URI = "mongodb://127.0.0.1:27017/todo_test";
 
 beforeAll(async () => {
-  mongoServer = await MongoMemoryServer.create();
+  console.log("Connecting to test MongoDB...");
 
-  const uri = mongoServer.getUri();
+  await mongoose.connect(TEST_DB_URI, {
+    serverSelectionTimeoutMS: 5000,
+    connectTimeoutMS: 5000
+  });
 
-  await mongoose.connect(uri);
+  console.log("Test MongoDB connected");
 });
 
 afterEach(async () => {
@@ -20,10 +24,11 @@ afterEach(async () => {
 });
 
 afterAll(async () => {
-  await mongoose.connection.dropDatabase();
-  await mongoose.connection.close();
-  await mongoServer.stop();
+  await mongoose.disconnect();
+
+  console.log("Test MongoDB disconnected");
 });
+
 
 describe("Todo API", () => {
 
@@ -62,9 +67,7 @@ describe("Todo API", () => {
       .get("/api/todoname");
 
     expect(response.statusCode).toBe(200);
-
     expect(response.body.length).toBe(1);
-
     expect(response.body[0].title).toBe("Learn Node");
   });
 
@@ -82,7 +85,6 @@ describe("Todo API", () => {
       .get(`/api/todoname/${todo._id}`);
 
     expect(response.statusCode).toBe(200);
-
     expect(response.body.title).toBe("Learn MongoDB");
   });
 
@@ -104,9 +106,7 @@ describe("Todo API", () => {
       });
 
     expect(response.statusCode).toBe(200);
-
     expect(response.body.todo.title).toBe("Updated Title");
-
     expect(response.body.todo.status).toBe("Completed");
   });
 
