@@ -1,19 +1,10 @@
-const express = require("express");
 const mongoose = require("mongoose");
-const cors = require("cors");
+require("dotenv").config();
 
-const app = express();
+const app = require("./app");
 
-// CORS
-app.use(cors({
-  origin: "http://localhost:5173"
-}));
-
-app.use(express.json());
-
-// MongoDB connection
 mongoose
-  .connect("mongodb://127.0.0.1:27017/todoDB")
+  .connect(process.env.MONGO_URI)
   .then(() => {
     console.log("MongoDB connected");
 
@@ -24,8 +15,3 @@ mongoose
   .catch((error) => {
     console.log("MongoDB connection error:", error);
   });
-
-const todoRoutes = require("./routes");
-
-// app.use("/api/todos", todoRoutes);
-app.use("/api/todoname", todoRoutes);
